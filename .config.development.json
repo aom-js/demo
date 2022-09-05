@@ -1,0 +1,17 @@
+{
+  "mailServer": {
+    "active": false,
+    "nodemailer": {
+      "provider": "...",
+      "title": "???",
+      "login": "!!!",
+      "password": "***"
+    }
+  },
+  "smsServer": {
+    "active": false,
+    "smsc": {},
+    "smsaero": {},
+    "smsru": {}
+  }
+}
