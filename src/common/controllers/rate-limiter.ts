@@ -6,12 +6,6 @@ import { RateLimit, Stores } from "koa2-ratelimit";
 import { ErrorMessage } from "common/api";
 import { Constructor } from "aom/lib/common/declares";
 
-const { REDIS_PASSWORD } = process.env;
-
-if (!REDIS_PASSWORD) {
-  throw new Error(`process.env.REDIS_PASSWORD is required!`);
-}
-
 class RateLimitResponse extends ErrorMessage {
   static status = 429;
 
