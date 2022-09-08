@@ -1,4 +1,5 @@
 // PM2 startup script
+const env = require("dotenv").config();
 
 const { NODE_ENV } = process.env;
 
@@ -8,6 +9,7 @@ const defaults = {
   env: {
     NODE_ENV,
     NODE_PATH: "./build/src",
+    ...env.parsed,
   },
 };
 

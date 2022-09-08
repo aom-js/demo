@@ -10,7 +10,16 @@ import {
 } from "common/constants";
 import moment from "moment";
 
-import { Post, Use, UseNext, Body, Err, Middleware, This } from "aom";
+import {
+  Post,
+  Use,
+  UseNext,
+  Body,
+  Err,
+  Middleware,
+  This,
+  Controller,
+} from "aom";
 import { Endpoint, NextFunction, ErrorFunction, ThisRef } from "aom";
 import { Next } from "aom";
 import { LoginTypes } from "common/types";
@@ -34,8 +43,15 @@ const LoginTokenSchema = ThisRef(
 );
 
 @AddTag("Авторизация")
+@Controller()
 export class LoginRoute extends AuthBase {
-  static rateLimiter: RateLimiter;
+  // максимум 30 запросов в минуту, c паузой после 10-го в 2 секунды
+  static rateLimiter = new RateLimiter({
+    safeRequests: 10,
+    maxRequests: 30,
+    inSeconds: 60,
+    waitSeconds: 2,
+  });
 
   @Post("/login")
   @Summary("Стандартная авторизация")
@@ -113,11 +129,11 @@ export class LoginRoute extends AuthBase {
     ConflictResponse.toJSON(),
     RequestCodeResponse.toJSON("Код отправлен")
   )
-  @Use(LoginRoute.CheckLogin)
+  @Use(RateLimiter.Attach, LoginRoute.CheckLogin)
   static async RequestCode(
     @This() { login, permissions }: LoginRoute,
-    @Err(ErrorMessage) err: ErrorFunction
-  ): Promise<MessageResponse> {
+    @Err(ConflictResponse) err: ErrorFunction
+  ): Promise<ErrorResponse<RequestCodeResponse>> {
     // ..
     const { accountLoginId } = this;
     const loginId = login._id;
@@ -139,7 +155,7 @@ export class LoginRoute extends AuthBase {
     });
 
     if (existsOneoffAuth) {
-      return err("Возможна отправка кода не чаще 1 раза в минуту", 409);
+      return err("Возможна отправка кода не чаще 1 раза в минуту");
     }
 
     // дизактивируем все старые одноразовые коды подтверждения
@@ -282,6 +298,3 @@ export class LoginRoute extends AuthBase {
     return authToken;
   }
 }
-
-LoginRoute.rateLimiter = new RateLimiter();
-LoginRoute.rateLimiter.maxRequests = 3;

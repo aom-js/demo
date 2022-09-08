@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { Context } from "koa";
-import { Middleware, Responses, This } from "aom";
 import { Controller, Ctx, Cursor, ICursor } from "aom";
+import { Middleware, Next, NextFunction, Responses, This } from "aom";
 import { RateLimit, Stores } from "koa2-ratelimit";
 import { ErrorMessage } from "common/api";
 import { Constructor } from "aom/lib/common/declares";
@@ -12,41 +12,51 @@ if (!REDIS_PASSWORD) {
   throw new Error(`process.env.REDIS_PASSWORD is required!`);
 }
 
-const RateLimitResponse = {
-  status: 429,
-  schema: ErrorMessage,
-  description: "Превышено количество запросов",
-};
+class RateLimitResponse extends ErrorMessage {
+  static status = 429;
+
+  static description = "Превышено количество запросов";
+}
 
 type RateLimitedRoute = Constructor & { rateLimiter: RateLimiter };
 
-const storeClient = new Stores.Redis({
-  host: "localhost",
-  port: 6379,
-  enable_offline_queue: false,
-  password: `${process.env.REDIS_PASSWORD}`,
-});
+const storeClient = new Stores.Memory();
 
 RateLimit.defaultOptions({
   store: storeClient,
 });
 
+interface IRateLimiter {
+  safeRequests: number;
+  maxRequests: number;
+  inSeconds: number;
+  waitSeconds: number;
+}
 @Controller()
-export class RateLimiter {
+export class RateLimiter implements IRateLimiter {
+  safeRequests = 10;
+
   maxRequests = 20;
 
   inSeconds = 1;
 
+  waitSeconds = 0;
+
   static prefixMap: Map<string, any> = new Map();
+
+  constructor(params: IRateLimiter) {
+    Object.assign(this, params);
+    return this;
+  }
 
   getMapMiddleware(prefix, originConstructor: RateLimitedRoute) {
     //
     if (!RateLimiter.prefixMap.has(prefix)) {
-      const rateLimiter = originConstructor.rateLimiter || this;
+      const { rateLimiter = this } = originConstructor;
       const limiterMiddleware = RateLimit.middleware({
         interval: { sec: rateLimiter.inSeconds }, //
-        delayAfter: 1, // begin slowing down responses after the first request
-        timeWait: 3 * 1000, // slow down subsequent responses by 3 seconds per request
+        delayAfter: rateLimiter.safeRequests, // begin slowing down responses after the first request
+        timeWait: rateLimiter.waitSeconds * 1000, //
         max: rateLimiter.maxRequests, // start blocking after N requests
         prefixKey: prefix, // to allow the bdd to Differentiate the endpoint
         keyGenerator: (ctx) => {
@@ -55,8 +65,8 @@ export class RateLimiter {
             (_.get(ctx, "session.uid") || ctx.get("x-real-ip") || ctx.ip)
           );
         },
-        handler: () => {
-          throw new ErrorMessage(RateLimitResponse.description, 429);
+        handler: (...args) => {
+          throw new RateLimitResponse(RateLimitResponse.description);
         },
       });
       RateLimiter.prefixMap.set(prefix, limiterMiddleware);
@@ -65,18 +75,19 @@ export class RateLimiter {
   }
 
   @Middleware()
-  @Responses(RateLimitResponse)
+  @Responses(RateLimitResponse.toJSON())
   static async Attach(
     @Ctx() ctx: Context,
+    @Next() next: NextFunction,
     @This() rateLimiter: RateLimiter,
-    @Cursor() cursor: ICursor,
-    { next } // возьмем оригинальную next-функцию для koa
+    @Cursor() cursor: ICursor
   ) {
     const { prefix } = cursor;
     const middleware = rateLimiter.getMapMiddleware(
       prefix,
       <RateLimitedRoute>cursor.origin.constructor
     );
-    return middleware(ctx, next);
+    const _next = await next();
+    return middleware(ctx, _next);
   }
 }

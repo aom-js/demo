@@ -1,6 +1,7 @@
 import { Promise } from "bluebird";
 import { Controller, Endpoint, Get, Next, NextFunction, Post, Put } from "aom";
 import { Bridge, Responses, Summary, This, Patch, Use, UseNext } from "aom";
+import { Logger } from "common/controllers";
 //
 import { PublicationAttachments } from "./attachments";
 import { PublicationAttachment } from "./attachments/attachment";
@@ -17,6 +18,7 @@ import {
 export class Publication {
   @Get()
   @Endpoint()
+  @Use(Logger.Attach)
   @Summary("Информация о публикации")
   @Responses(PublicationID.toJSON("Публикация"))
   static async Index(

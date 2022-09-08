@@ -5,13 +5,13 @@
   "main": "index.ts",
   "scripts": {
     "start": "NODE_PATH=./src nodemon -w ./ --exec ts-node --files scripts/development.ts",
-    "pm2": "NODE_ENV=development pm2 start ecosystem.config.js",
+    "pm2": "NODE_PATH=./build NODE_ENV=development pm2 start ecosystem.config.js",
     "prebuild": "rm -rf build/",
     "build": "tsc --project tsconfig.prod.cjs.json && npm run copy-files",
-    "prod": "NODE_ENV=production pm2 start ecosystem.config.js",
+    "prod": "NODE_PATH=./build NODE_ENV=production pm2 start ecosystem.config.js",
     "addsuperuser": "NODE_PATH=./src ts-node --files scripts/addsuperuser.ts",
     "lint": "eslint . --ext .ts",
-    "copy-files": "cp -R assets/ build/assets/ && cp .env build/ && cp .config.*.json build/"
+    "copy-files": "cp .env build/ && cp .config.*.json build/"
   },
   "author": "scarych",
   "license": "ISC",
@@ -51,7 +51,6 @@
     "openapi3-ts": "^2.0.1",
     "plural-ru": "^2.0.2",
     "prompt": "^1.2.0",
-    "redis": "3.1.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.4.0",
     "sharp": "^0.29.2",

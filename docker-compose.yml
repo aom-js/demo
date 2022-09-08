@@ -5,8 +5,8 @@ services:
     image: mongo
     restart: always
     # environment:
-      # MONGO_INITDB_ROOT_USERNAME: ${DB_LOGIN}
-      # MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    # MONGO_INITDB_ROOT_USERNAME: ${DB_LOGIN}
+    # MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
       - "${DB_PORT}:27017"
     volumes:
@@ -34,23 +34,6 @@ services:
       - "-c"
       - 'echo "wait some time..." && /bin/sleep 10 && start-kafka.sh' # run kafka after sleep time for connect to zookeeper
 
-  redis:
-    image: redis
-    restart: "unless-stopped"
-    environment:
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=no
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    ports:
-      - 6379:6379
-    volumes:
-      - redis-volume:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
-
 volumes:
-  redis-volume:
-    driver: local
   mongo-volume:
     driver: local

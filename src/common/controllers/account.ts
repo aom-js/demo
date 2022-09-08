@@ -17,7 +17,6 @@ export class Account {
   permissions: DocumentType<schemas.UsersPermissions>;
 
   @Middleware()
-  @Use(Logger.Attach)
   static async Init(
     @This() account: Account,
     @This(Auth) auth: Auth,

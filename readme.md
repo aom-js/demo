@@ -8,7 +8,9 @@
 Программный код представляет собой пример `REST`-сервисов, выполняющих действия: авторизация пользователей,
 управление справочниками в защищенном API, обращение к файлам и базовые операции над картинками.
 
-Docker-контейнеры поднимают сопутствующее окружение: `MongoDB`, `Zookeeper`+`Kafka`, `Redis`.
+Docker-контейнеры поднимают сопутствующее окружение: `MongoDB`, `Zookeeper`+`Kafka`. Пример с контейнерами
+показывает возможные аспекты композиции окружения: `nginx`, `Elastic`, `Redis`, `Prerenderer` и так далее. В общем смысле
+в production вместо `docker` могут быть использованы уже
 
 Код демонстрирует типовую функциональность, паттерны которой применимы для многих типичных бизнес-задач,
 и в общем виде поддерживается документацией [`aom-js/tutorial`](https://github.com/aom-js/tutorial).
@@ -35,3 +37,38 @@ $ yarn start
 
 Некоторые каталоги содержат небольшую сопроводительную документацию. Рекомендуется для медитативного изучения
 и экспериментов.
+
+Для обращения к поднятым сервисам в `production` используется конфигурационный паттер `nginx` в 
+`/etc/nginx/sites-enabled/*.conf`.
+
+```conf
+server {
+        server_name chat-api.thegame.bz;
+        access_log     /var/log/nginx/chat-api.access.log;
+        error_log       /var/log/nginx/chat-api.error.log;
+
+        gzip on;
+        gzip_disable "msie6";
+
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_buffers 16 8k;
+        gzip_http_version 1.1;
+        gzip_types text/plain text/css application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript;
+
+        client_max_body_size 5M;
+        client_body_buffer_size    128k;
+
+        location / {
+            proxy_pass http://127.0.0.1:7900;
+            proxy_redirect     off;
+            proxy_set_header   Host  $host;
+            proxy_intercept_errors on;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+}
+
+```
+
+Таким образом становится доступно подключение к открытым портам извне.

@@ -1,7 +1,6 @@
 import { Context, Request } from "koa";
 import { nanoid } from "nanoid";
-import { logger } from "config";
-// import runtimeLogger from "config/runtime-logger";
+import logger from "config/api-logger";
 import { Controller, Ctx, Cursor, ICursor, IRoute, Middleware } from "aom";
 import { Next, NextFunction, Route, StateMap, This } from "aom";
 
