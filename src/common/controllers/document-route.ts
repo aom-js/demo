@@ -23,6 +23,7 @@ import {
   OpenApiResponse,
   OpenApiPathParameterObject,
 } from "aom/lib/openapi/types";
+
 import { ERROR_ID, ERROR_NOT_FOUND } from "common/constants";
 
 const PathRefParams = ThisRef(
@@ -32,9 +33,9 @@ const PathRefParams = ThisRef(
 );
 
 const QueryRefParams = ThisRef(
-  <T extends typeof DocumentRoute>(constructor: T) => [
-    QueryParameters(constructor.apiPath("query")),
-  ]
+  <T extends typeof DocumentRoute>(constructor: T) => {
+    return [QueryParameters(constructor.apiPath("query"))];
+  }
 );
 
 @Controller()
@@ -64,6 +65,7 @@ export class DocumentRoute<T extends typeof BaseModel, U = C.Instance<T>> {
 
   @Middleware()
   @Responses(NotFoundResponse.toJSON(ERROR_ID))
+  @DelayRefStack(PathRefParams)
   static async PathPrepare(
     @This() elem: DocumentRoute<typeof BaseModel>,
     @Params() params: any,
@@ -80,6 +82,7 @@ export class DocumentRoute<T extends typeof BaseModel, U = C.Instance<T>> {
 
   @Middleware()
   @Responses(NotFoundResponse.toJSON(ERROR_ID))
+  @DelayRefStack(QueryRefParams)
   static async QueryPrepare(
     @This() elem: DocumentRoute<typeof BaseModel>,
     @Query() params: any,
@@ -118,17 +121,15 @@ export class DocumentRoute<T extends typeof BaseModel, U = C.Instance<T>> {
   }
 
   @Middleware()
-  @DelayRefStack(PathRefParams)
-  @Responses(NotFoundResponse.toJSON())
+  @Use(DocumentRoute.PathPrepare, DocumentRoute.Define)
   static async PathID(@Next() next: NextFunction) {
-    return next(this.PathPrepare, this.Define);
+    return next();
   }
 
   @Middleware()
-  @DelayRefStack(QueryRefParams)
-  @Responses(NotFoundResponse.toJSON())
+  @Use(DocumentRoute.QueryPrepare, DocumentRoute.Define)
   static async QueryID(@Next() next: NextFunction) {
-    return next(this.PathPrepare, this.Define);
+    return next();
   }
 
   static toString(): string {

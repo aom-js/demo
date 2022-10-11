@@ -736,10 +736,10 @@ anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-aom@^1.0.0-beta.36:
-  version "1.0.0-beta.36"
-  resolved "https://registry.yarnpkg.com/aom/-/aom-1.0.0-beta.36.tgz#2e9f96cfd3a2ef6a97c581f7b19986b73aab54f4"
-  integrity sha512-kawPbB3+yB1Zvf6+446CQxEbg5bvUngM2fFzUf84o5JVOAUryj//PI2w3Ia1kz2fTqnjzAOJ6BzyXiSeej2/zg==
+aom@^1.0.0-beta.37:
+  version "1.0.0-beta.37"
+  resolved "https://registry.yarnpkg.com/aom/-/aom-1.0.0-beta.37.tgz#a238b0bc7885e8065216f16cc7e33ba0042b618d"
+  integrity sha512-YoEODnAXKoRpJ2ynD1JyDvtSMkt/9k3S0VKdZNJIgNV5OFuoPXPonGzVrFNioqQy9sM3biob7CKoFGloE43v5A==
   dependencies:
     bluebird "^3.7.2"
     class-transformer "^0.4.0"

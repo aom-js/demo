@@ -9,7 +9,7 @@ import { SafeQuery } from "common/decorators";
 import { AspectRatioWidthQuery } from "./init";
 
 @Controller()
-@Use(File.Install)
+@Use(File.PathID, File.Install)
 export class File extends controllers.Files.document("fileId") {
   @Middleware()
   @Responses(NotFoundResponse.toJSON())
